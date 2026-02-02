@@ -64,8 +64,8 @@ export default async function SubjectsPage() {
                         key={key}
                         title={SUBJECTS[key].shortName}
                         value={`${((stats.mean / SUBJECTS[key].maxMarks) * 100).toFixed(1)}%`}
-                        description={`Pass rate: ${stats.passRate.toFixed(0)}%`}
-                        icon={stats.passRate >= 80 ? TrendingUp : TrendingDown}
+                        description={`Mean: ${stats.mean.toFixed(1)}/${SUBJECTS[key].maxMarks}`}
+                        icon={TrendingUp}
                     />
                 ))}
             </div>

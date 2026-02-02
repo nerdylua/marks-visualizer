@@ -7,11 +7,10 @@ import {
     XAxis,
     YAxis,
     Cell,
+    Tooltip,
 } from "recharts"
 import {
     ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
     ChartLegend,
     ChartLegendContent,
     type ChartConfig,
@@ -19,7 +18,7 @@ import {
 import { BarChartData } from "@/lib/data/types"
 
 interface SubjectBarChartProps {
-    data: BarChartData[]
+    data: (BarChartData & { min?: number; max?: number; median?: number })[]
     className?: string
     showLegend?: boolean
 }
@@ -49,6 +48,46 @@ const chartConfig = {
         color: "oklch(0.65 0.22 320)",
     },
 } satisfies ChartConfig
+
+interface TooltipPayload {
+    payload: BarChartData & { min?: number; max?: number; median?: number }
+}
+
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) {
+    if (!active || !payload || payload.length === 0) return null
+
+    const data = payload[0].payload
+
+    return (
+        <div className="rounded-lg border bg-background p-3 shadow-md min-w-[140px]">
+            <p className="font-medium text-sm mb-2">{data.name}</p>
+            <div className="space-y-1 text-xs">
+                <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Average:</span>
+                    <span className="font-mono font-semibold">{data.value}%</span>
+                </div>
+                {data.median !== undefined && (
+                    <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Median:</span>
+                        <span className="font-mono">{data.median}%</span>
+                    </div>
+                )}
+                {data.min !== undefined && (
+                    <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Min:</span>
+                        <span className="font-mono">{data.min}%</span>
+                    </div>
+                )}
+                {data.max !== undefined && (
+                    <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Max:</span>
+                        <span className="font-mono">{data.max}%</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
 
 export function SubjectBarChart({
     data,
@@ -82,13 +121,9 @@ export function SubjectBarChart({
                     className="text-xs"
                     domain={[0, 100]}
                 />
-                <ChartTooltip
+                <Tooltip
                     cursor={{ fill: "var(--color-muted)", opacity: 0.3 }}
-                    content={
-                        <ChartTooltipContent
-                            formatter={(value) => [`${value}%`, "Average"]}
-                        />
-                    }
+                    content={<CustomTooltip />}
                 />
                 <Bar
                     dataKey="value"
@@ -110,3 +145,4 @@ export function SubjectBarChart({
         </ChartContainer>
     )
 }
+

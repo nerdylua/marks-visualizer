@@ -31,7 +31,7 @@ export default async function OverviewPage() {
         <div className="space-y-6">
             <PageHeader
                 title="Overview"
-                description="5th Semester CSE class performance at a glance"
+                description="5th Semester CSE performance at a glance"
             />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

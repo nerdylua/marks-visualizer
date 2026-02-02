@@ -13,20 +13,28 @@ import { SUBJECTS, ELECTIVE_COLORS, GRADE_COLORS } from './constants';
 import { mean, getSubjectScores, getSubjectStats } from './statistics';
 import { getNormalizedScore } from './parser';
 
-export function getSubjectAveragesChartData(students: Student[]): BarChartData[] {
+export function getSubjectAveragesChartData(students: Student[]): (BarChartData & { min: number; max: number; median: number })[] {
     const subjectKeys: SubjectKey[] = ['pome', 'dbms', 'aiml', 'toc', 'elective'];
 
     return subjectKeys.map(key => {
         const stats = getSubjectStats(students, key);
-        const normalizedMean = (stats.mean / SUBJECTS[key].maxMarks) * 100;
+        const maxMarks = SUBJECTS[key].maxMarks;
+        const normalizedMean = (stats.mean / maxMarks) * 100;
+        const normalizedMin = (stats.min / maxMarks) * 100;
+        const normalizedMax = (stats.max / maxMarks) * 100;
+        const normalizedMedian = (stats.median / maxMarks) * 100;
 
         return {
             name: SUBJECTS[key].shortName,
             value: Math.round(normalizedMean * 10) / 10,
+            min: Math.round(normalizedMin * 10) / 10,
+            max: Math.round(normalizedMax * 10) / 10,
+            median: Math.round(normalizedMedian * 10) / 10,
             fill: SUBJECTS[key].color,
         };
     });
 }
+
 
 export function getGradeDistributionChartData(
     distribution: GradeDistribution
@@ -224,3 +232,47 @@ export function getElectiveComparisonData(students: Student[]): {
         };
     });
 }
+
+export function getElectiveScoreDistributionData(students: Student[]): {
+    elective: string;
+    min: number;
+    max: number;
+    mean: number;
+    median: number;
+    q1: number;
+    q3: number;
+}[] {
+    const electives: ElectiveName[] = ['Cloud Computing', 'NLP', 'Quantum Computing'];
+
+    return electives.map(elective => {
+        const electiveStudents = getStudentsByElective(students, elective);
+        const scores = electiveStudents
+            .map(s => s.elective.score)
+            .filter((s): s is number => s !== null)
+            .sort((a, b) => a - b);
+
+        if (scores.length === 0) {
+            return { elective, min: 0, max: 0, mean: 0, median: 0, q1: 0, q3: 0 };
+        }
+
+        const avg = mean(scores);
+        const mid = Math.floor(scores.length / 2);
+        const med = scores.length % 2 !== 0
+            ? scores[mid]
+            : (scores[mid - 1] + scores[mid]) / 2;
+
+        const q1Index = Math.floor(scores.length * 0.25);
+        const q3Index = Math.floor(scores.length * 0.75);
+
+        return {
+            elective,
+            min: Math.min(...scores),
+            max: Math.max(...scores),
+            mean: avg,
+            median: med,
+            q1: scores[q1Index],
+            q3: scores[q3Index],
+        };
+    });
+}
+

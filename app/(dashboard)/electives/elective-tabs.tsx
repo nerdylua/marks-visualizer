@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
     Table,
     TableBody,
@@ -11,10 +13,17 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Student } from "@/lib/data/types"
 import { cn } from "@/lib/utils"
-import { getTopStudents } from "@/lib/data/transformers"
 import { mean, stdDev, median } from "@/lib/data/statistics"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface ElectiveTabsProps {
     ccStudents: Student[]
@@ -76,55 +85,147 @@ function ElectiveStats({ students }: { students: Student[] }) {
     )
 }
 
-function TopPerformersTable({ students }: { students: Student[] }) {
+function PaginatedPerformersTable({ students }: { students: Student[] }) {
+    const [pageSize, setPageSize] = useState<number>(10)
+    const [currentPage, setCurrentPage] = useState(1)
+
     const sorted = [...students]
         .filter(s => s.elective.score !== null)
         .sort((a, b) => (b.elective.score ?? 0) - (a.elective.score ?? 0))
-        .slice(0, 10)
+
+    const totalStudents = sorted.length
+    const totalPages = Math.ceil(totalStudents / pageSize)
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = Math.min(startIndex + pageSize, totalStudents)
+    const paginatedStudents = sorted.slice(startIndex, endIndex)
+
+    const handlePageSizeChange = (value: string) => {
+        const newSize = value === "all" ? totalStudents : parseInt(value)
+        setPageSize(newSize)
+        setCurrentPage(1)
+    }
 
     return (
-        <Table>
-            <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-12 text-center">#</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead className="hidden sm:table-cell">USN</TableHead>
-                    <TableHead className="text-right">Elective Score</TableHead>
-                    <TableHead className="text-right">Overall %</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {sorted.map((student, index) => (
-                    <TableRow key={student.usn} className="group transition-colors">
-                        <TableCell className="text-center font-mono text-sm text-muted-foreground">
-                            {index + 1}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                            <span className="truncate max-w-[200px] block">
-                                {student.name}
-                            </span>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell font-mono text-sm text-muted-foreground">
-                            {student.usn}
-                        </TableCell>
-                        <TableCell className="text-right font-mono font-semibold">
-                            {student.elective.score}/100
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <Badge
-                                variant="outline"
-                                className={cn(
-                                    "font-semibold",
-                                    gradeColors[student.grade] || "bg-muted text-muted-foreground"
-                                )}
-                            >
-                                {student.percentage.toFixed(1)}%
-                            </Badge>
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h4 className="font-semibold">
+                    All Students ({totalStudents})
+                </h4>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Show:</span>
+                    <Select
+                        value={pageSize === totalStudents ? "all" : pageSize.toString()}
+                        onValueChange={handlePageSizeChange}
+                    >
+                        <SelectTrigger className="w-[80px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="30">30</SelectItem>
+                            <SelectItem value="all">All</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="relative overflow-auto max-h-[500px]">
+                <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="w-12 text-center">#</TableHead>
+                            <TableHead>Student</TableHead>
+                            <TableHead className="hidden sm:table-cell">USN</TableHead>
+                            <TableHead className="text-right">Elective Score</TableHead>
+                            <TableHead className="text-right">Overall %</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedStudents.map((student, index) => (
+                            <TableRow key={student.usn} className="group transition-colors">
+                                <TableCell className="text-center font-mono text-sm text-muted-foreground">
+                                    {startIndex + index + 1}
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                    <span className="truncate max-w-[200px] block">
+                                        {student.name}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell font-mono text-sm text-muted-foreground">
+                                    {student.usn}
+                                </TableCell>
+                                <TableCell className="text-right font-mono font-semibold">
+                                    {student.elective.score}/100
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Badge
+                                        variant="outline"
+                                        className={cn(
+                                            "font-semibold",
+                                            gradeColors[student.grade] || "bg-muted text-muted-foreground"
+                                        )}
+                                    >
+                                        {student.percentage.toFixed(1)}%
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-muted-foreground">
+                        Showing {startIndex + 1}-{endIndex} of {totalStudents}
+                    </p>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="size-4" />
+                        </Button>
+                        <div className="flex items-center gap-1 px-2">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum: number
+                                if (totalPages <= 5) {
+                                    pageNum = i + 1
+                                } else if (currentPage <= 3) {
+                                    pageNum = i + 1
+                                } else if (currentPage >= totalPages - 2) {
+                                    pageNum = totalPages - 4 + i
+                                } else {
+                                    pageNum = currentPage - 2 + i
+                                }
+                                return (
+                                    <Button
+                                        key={pageNum}
+                                        variant={currentPage === pageNum ? "default" : "ghost"}
+                                        size="icon"
+                                        className="size-8"
+                                        onClick={() => setCurrentPage(pageNum)}
+                                    >
+                                        {pageNum}
+                                    </Button>
+                                )
+                            })}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            <ChevronRight className="size-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </div>
     )
 }
 
@@ -155,9 +256,7 @@ export function ElectiveTabs({
                         <CardContent className="pt-6">
                             <h3 className="text-lg font-semibold mb-4">{elective.name} Statistics</h3>
                             <ElectiveStats students={elective.students} />
-
-                            <h4 className="font-semibold mb-4">Top 10 Performers</h4>
-                            <TopPerformersTable students={elective.students} />
+                            <PaginatedPerformersTable students={elective.students} />
                         </CardContent>
                     </Card>
                 </TabsContent>

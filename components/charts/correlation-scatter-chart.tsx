@@ -7,11 +7,10 @@ import {
     YAxis,
     CartesianGrid,
     ZAxis,
+    Tooltip,
 } from "recharts"
 import {
     ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart"
 import { ScatterPoint } from "@/lib/data/types"
@@ -29,6 +28,28 @@ const chartConfig = {
         color: "oklch(0.65 0.18 200)",
     },
 } satisfies ChartConfig
+
+function CustomTooltip({ active, payload, xLabel, yLabel }: {
+    active?: boolean
+    payload?: { payload: ScatterPoint }[]
+    xLabel: string
+    yLabel: string
+}) {
+    if (!active || !payload || payload.length === 0) return null
+
+    const point = payload[0].payload
+
+    return (
+        <div className="rounded-lg border bg-background p-3 shadow-md">
+            <p className="font-medium text-sm">{point.name}</p>
+            <p className="text-xs text-muted-foreground font-mono">{point.usn}</p>
+            <div className="mt-2 space-y-1 text-xs">
+                <p><span className="text-muted-foreground">{xLabel}:</span> <span className="font-mono font-medium">{point.x.toFixed(1)}%</span></p>
+                <p><span className="text-muted-foreground">{yLabel}:</span> <span className="font-mono font-medium">{point.y.toFixed(1)}%</span></p>
+            </div>
+        </div>
+    )
+}
 
 export function CorrelationScatterChart({
     data,
@@ -80,19 +101,9 @@ export function CorrelationScatterChart({
                     }}
                 />
                 <ZAxis range={[40, 80]} />
-                <ChartTooltip
+                <Tooltip
                     cursor={{ strokeDasharray: "3 3" }}
-                    content={
-                        <ChartTooltipContent
-                            formatter={(value, name, props) => {
-                                const point = props.payload
-                                return [
-                                    `${point.name} (${point.usn})`,
-                                    `${xLabel}: ${point.x}%, ${yLabel}: ${point.y}%`,
-                                ]
-                            }}
-                        />
-                    }
+                    content={<CustomTooltip xLabel={xLabel} yLabel={yLabel} />}
                 />
                 <Scatter
                     name="Students"

@@ -68,10 +68,6 @@ export function SubjectTabs({
                                             <p className="text-2xl font-bold">{stats.stdDev.toFixed(1)}</p>
                                             <p className="text-xs text-muted-foreground">Std Dev</p>
                                         </div>
-                                        <div className="text-center">
-                                            <p className="text-2xl font-bold">{stats.passRate.toFixed(0)}%</p>
-                                            <p className="text-xs text-muted-foreground">Pass Rate</p>
-                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
@@ -104,13 +100,12 @@ export function SubjectTabs({
 
                         <div className="grid gap-4 lg:grid-cols-2">
                             <ChartCard
-                                title="Top 15 Performers"
-                                description={`Highest scoring students in ${SUBJECTS[key].shortName}`}
+                                title="Subject Performers"
+                                description={`Student rankings in ${SUBJECTS[key].shortName}`}
                             >
                                 <SubjectRankingTable
                                     students={students}
                                     subjectKey={key}
-                                    limit={15}
                                 />
                             </ChartCard>
 

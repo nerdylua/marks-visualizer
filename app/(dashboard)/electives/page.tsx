@@ -1,26 +1,26 @@
 import { loadStudentData } from "@/lib/data/loader"
 import {
     getElectiveDistributionChartData,
-    getElectiveComparisonData,
+    getElectiveScoreDistributionData,
     getStudentsByElective,
-    getTopStudents
 } from "@/lib/data/transformers"
-import { getSubjectStats, mean } from "@/lib/data/statistics"
+import { mean } from "@/lib/data/statistics"
 
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { ChartCard } from "@/components/dashboard/chart-card"
 import { ElectivePieChart } from "@/components/charts/elective-pie-chart"
-import { ElectiveComparisonChart } from "@/components/charts/elective-comparison-chart"
 import { ElectiveTabs } from "./elective-tabs"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { ELECTIVE_COLORS } from "@/lib/data/constants"
 
-import { Users, TrendingUp, Award, BookOpen } from "lucide-react"
+import { Users, Award } from "lucide-react"
 
 export default async function ElectivesPage() {
     const students = await loadStudentData()
 
     const distributionData = getElectiveDistributionChartData(students)
-    const comparisonData = getElectiveComparisonData(students)
+    const scoreDistributionData = getElectiveScoreDistributionData(students)
 
     const topByElective = {
         cc: getStudentsByElective(students, 'Cloud Computing'),
@@ -83,28 +83,43 @@ export default async function ElectivesPage() {
                     />
                 </ChartCard>
 
-                <ChartCard
-                    title="Average Score Comparison"
-                    description="Compare average scores across electives"
-                >
-                    <ElectiveComparisonChart
-                        data={comparisonData}
-                        className="min-h-[300px] w-full"
-                        dataKey="average"
-                    />
-                </ChartCard>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Score Comparison</CardTitle>
+                        <CardDescription>Mean scores and ranges by elective</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {scoreDistributionData.map((data) => (
+                            <div key={data.elective} className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-medium">{data.elective}</span>
+                                    <span className="font-mono text-muted-foreground">
+                                        {data.min} - {data.max}
+                                    </span>
+                                </div>
+                                <div className="relative h-3 rounded-full bg-muted overflow-hidden">
+                                    <div
+                                        className="absolute inset-y-0 left-0 rounded-full transition-all"
+                                        style={{
+                                            width: `${data.mean}%`,
+                                            backgroundColor: ELECTIVE_COLORS[data.elective as keyof typeof ELECTIVE_COLORS],
+                                        }}
+                                    />
+                                    <div
+                                        className="absolute top-0 bottom-0 w-0.5 bg-foreground"
+                                        style={{ left: `${data.mean}%` }}
+                                        title={`Mean: ${data.mean.toFixed(1)}`}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span>Mean: {data.mean.toFixed(1)}</span>
+                                    <span>Median: {data.median.toFixed(1)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
             </div>
-
-            <ChartCard
-                title="Pass Rate Comparison"
-                description="Percentage of students who passed (≥40%) in each elective"
-            >
-                <ElectiveComparisonChart
-                    data={comparisonData}
-                    className="min-h-[200px] w-full"
-                    dataKey="passRate"
-                />
-            </ChartCard>
 
             <ElectiveTabs
                 ccStudents={topByElective.cc}

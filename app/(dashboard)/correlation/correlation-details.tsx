@@ -138,35 +138,7 @@ export function CorrelationDetails({ students, correlationPairs }: CorrelationDe
                     />
                 </div>
             </ChartCard>
-
-            <Card>
-                <CardContent className="pt-6">
-                    <h4 className="font-semibold mb-2">Interpretation</h4>
-                    <p className="text-sm text-muted-foreground">
-                        {currentCorrelation >= 0.5 ? (
-                            <>
-                                Students who score well in <strong>{SUBJECTS[selectedX].shortName}</strong> tend
-                                to also score well in <strong>{SUBJECTS[selectedY].shortName}</strong>.
-                            </>
-                        ) : currentCorrelation >= 0.3 ? (
-                            <>
-                                There is a weak positive relationship between <strong>{SUBJECTS[selectedX].shortName}</strong> and{" "}
-                                <strong>{SUBJECTS[selectedY].shortName}</strong> scores.
-                            </>
-                        ) : currentCorrelation >= -0.3 ? (
-                            <>
-                                There is little to no correlation between <strong>{SUBJECTS[selectedX].shortName}</strong> and{" "}
-                                <strong>{SUBJECTS[selectedY].shortName}</strong>.
-                            </>
-                        ) : (
-                            <>
-                                There is a negative correlation between <strong>{SUBJECTS[selectedX].shortName}</strong> and{" "}
-                                <strong>{SUBJECTS[selectedY].shortName}</strong>.
-                            </>
-                        )}
-                    </p>
-                </CardContent>
-            </Card>
         </div>
     )
 }
+
